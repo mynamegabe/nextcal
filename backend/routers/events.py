@@ -9,7 +9,7 @@ import asyncio
 from utils.common import create_access_token, get_current_user, Token, hash_password
 from db import Session, get_session, User, CalendarEvent, Calender, Recommendations
 import schemas
-from config import GEMINI_API_KEY
+from config import GEMINI_API_KEY, GOOGLE_MAPS_API_KEY
 from modules.recommender import GeminiActivityRecommender, get_location_string
 from modules.personality import load_profile_from_json
 from modules.weather import get_forecast
@@ -17,6 +17,7 @@ from sqlalchemy import delete
 
 from google.oauth2 import id_token
 from google.auth.transport import requests
+import requests as req
 from math import ceil
 
 ## Location Based Stuff
@@ -194,7 +195,8 @@ async def recommend(calendar_id : str, session: SessionDep, current_user: User =
                     novel_reason=event.novel_reason,
                     date=event.date,
                     location=event.location,
-                    calendar_id=event.calendar_id
+                    calendar_id=event.calendar_id,
+                    url=event.url
                 ) for event in events
             ]
         }
@@ -246,13 +248,22 @@ async def recommend(payload : schemas.LocationData, session: SessionDep, current
         
         # Get recommendations
         recommendations = await recommender.get_recommendations(sample_personality.model_dump(), weather_data, user_events, [payload.latitude, payload.longitude])
-        print("GOTTEN:",recommendations)
 
         session.exec(delete(Recommendations))
         session.commit()
         #Set some breakpoint or sum sht
+        google_maps_api = f"https://maps.googleapis.com/maps/api/place/textsearch/json?query={{}}&key={GOOGLE_MAPS_API_KEY}"
+        place_detail_api = f"https://maps.googleapis.com/maps/api/place/details/json?place_id={{}}&fields=website&key={GOOGLE_MAPS_API_KEY}"
         for date, recs in recommendations.items():
             for recommendation in recs:
+                r = req.get(google_maps_api.format(recommendation['location'])).json()
+                if len(r['results']) > 0:
+                    place_id = r['results'][0]['place_id']
+                    r = req.get(place_detail_api.format(place_id)).json()
+                    url = r['result'].get('website', '')
+                else:
+                    url=''
+                recommendation['url'] = url
                 new_event = Recommendations(
                     recommendation_id=str(uuid4()),
                     name=recommendation['name'],
@@ -262,7 +273,8 @@ async def recommend(payload : schemas.LocationData, session: SessionDep, current
                     novel_reason=recommendation.get('novel_reason', ''),
                     date=date,
                     calendar_id=payload.calendar_id,
-                    location=recommendation['location']
+                    location=recommendation['location'],
+                    url=url
                 )
                 session.add(new_event)
         session.commit()

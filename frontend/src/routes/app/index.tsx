@@ -37,7 +37,7 @@ import {
 
 import { useEffect, useState } from "react";
 import { AddEventForm } from "@/components/add-event-form";
-import { getCalendar, getCalendars, getEvents, updateEvent} from "@/lib/api";
+import { getCalendar, getCalendars, getEvents, updateEvent } from "@/lib/api";
 import { Toaster } from "@/components/ui/toaster";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -96,6 +96,8 @@ function RouteComponent() {
   const [month, setMonth] = useState(new Date());
   const [events, setEvents] = useState({});
   const [allEvents, setAllEvents] = useState([]);
+  const [eventOpen, setEventOpen] = useState(false);
+  const [openedEvent, setOpenedEvent] = useState(null);
 
   const [isDropped, setIsDropped] = useState(false);
 
@@ -104,17 +106,27 @@ function RouteComponent() {
     const { active, over } = event;
     // update active date to over event date
     if (over) {
-      console.log(over);
+      if (active.data.current.from === over.data.current.to) {
+        console.log("same");
+        setEventOpen(true);
+        setOpenedEvent(active.data.current.event);
+        return;
+      }
+
       let newEvents = { ...events };
       if (newEvents[over.data.current.to] == null) {
         newEvents[over.data.current.to] = [active.data.current.event];
       } else {
-        newEvents[over.data.current.index] = [
-          ...newEvents[over.data.current.index],
-          active.data.event,
+        // append to existing events
+        newEvents[over.data.current.to] = [
+          ...newEvents[over.data.current.to],
+          active.data.current.event,
         ];
       }
-      console.log(newEvents[active.data.current.from], active.data.current.event);
+      console.log(
+        newEvents[active.data.current.from],
+        active.data.current.event
+      );
       newEvents[active.data.current.from] = newEvents[
         active.data.current.from
       ].filter((event) => event.id !== active.data.current.event.id);
@@ -124,7 +136,7 @@ function RouteComponent() {
       console.log("EFINOENF: " + event);
       updateEvent({
         id: active.data.current.event.id,
-        diff: (old_date - new_date) * 86400000,
+        diff: (old_date - new_date) * 1000 * 60 * 60 * 24,
       });
     }
     // if (event.over && event.over.id === "droppable") {
@@ -190,6 +202,7 @@ function RouteComponent() {
           lastDay={lastDay}
           setLastDay={setLastDay}
           calendars={calendars}
+          setCalendars={setCalendars}
           selectedCalendar={selectedCalendar}
           setSelectedCalendar={setSelectedCalendar}
           month={month}
@@ -275,26 +288,28 @@ function RouteComponent() {
                           event={event}
                         />
                       ))}
+                    {hoverDate != null && hoverDate.getDate() === index + 1 && (
+                      <Dialog>
+                        <DialogTrigger className="bg-blue-300 text-left text-xs text-white rounded p-2">
+                          + Add Event
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Add an event</DialogTitle>
+                            <AddEventForm
+                              calendar={selectedCalendar}
+                              date={hoverDate}
+                              events={allEvents}
+                              setEvents={setAllEvents}
+                              defaultValues={{
+                                ...openedEvent,
+                              }}
+                            />
+                          </DialogHeader>
+                        </DialogContent>
+                      </Dialog>
+                    )}
                   </Droppable>
-                  {hoverDate != null && hoverDate.getDate() === index + 1 && (
-                    <Dialog>
-                      <DialogTrigger className="bg-blue-300 text-left text-xs text-white rounded p-2">
-                        + Add Event
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Add an event</DialogTitle>
-                          <AddEventForm
-                            calendar={selectedCalendar}
-                            date={hoverDate}
-                            events={allEvents}
-                            setEvents={setAllEvents}
-                            
-                          />
-                        </DialogHeader>
-                      </DialogContent>
-                    </Dialog>
-                  )}
                 </div>
               ))}
 
@@ -308,6 +323,30 @@ function RouteComponent() {
                   </div>
                 )
               )}
+
+              <Dialog
+                open={eventOpen}
+                onOpenChange={() => {
+                  setEventOpen(false);
+                  setOpenedEvent(null);
+                }}
+              >
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>View event</DialogTitle>
+                    <AddEventForm
+                      calendar={selectedCalendar}
+                      date={hoverDate}
+                      events={allEvents}
+                      setEvents={setAllEvents}
+                      defaultValues={{
+                        ...openedEvent,
+                      }}
+                      view={true}
+                    />
+                  </DialogHeader>
+                </DialogContent>
+              </Dialog>
             </div>
           </DndContext>
         </div>

@@ -62,6 +62,7 @@ class CalendarEvent(BaseModel):
     start_time: int
     end_time: int
     calendar_id: str = None
+    url: str = None
 
 class CalendarEventDiff(BaseModel):
     diff: int = 0
@@ -75,11 +76,12 @@ class LocationData(BaseModel):
 
 class Recommendations(BaseModel):
     id: str = None
-    name: str
-    description: str
+    name: str = ''
+    description: str = ''
     duration_minutes: int
-    is_novel: bool  
-    novel_reason: str 
-    date: str 
+    is_novel: bool = False
+    novel_reason: str = ''
+    date: str = ''
     calendar_id: str
-    location: str
+    location: str = ''
+    url: Optional[str] = ''

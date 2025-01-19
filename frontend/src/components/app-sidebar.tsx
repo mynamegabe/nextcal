@@ -59,6 +59,8 @@ import {
 import { AddCalendarForm } from "./add-calendar-form";
 import { DndContext, useDroppable, useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
+import { Button } from "./ui/button";
+import { AddEventForm } from "./add-event-form";
 
 function Droppable({ index, id, ...props }) {
   const { setNodeRef } = useDroppable({
@@ -139,6 +141,7 @@ export function AppSidebar({
   selectedCalendar,
   setSelectedCalendar,
   calendars,
+  setCalendars,
   month,
   setMonth,
   events,
@@ -308,7 +311,10 @@ export function AppSidebar({
                 <DialogContent>
                   <DialogHeader>
                     <DialogTitle>Create a Calendar</DialogTitle>
-                    <AddCalendarForm />
+                    <AddCalendarForm 
+                      calendars={calendars}
+                      setCalendars={setCalendars}
+                    />
                   </DialogHeader>
                 </DialogContent>
               </Dialog>
@@ -338,14 +344,47 @@ export function AppSidebar({
               recommendations.map((item) => (
                 <Card className="flex flex-col gap-1 w-full">
                   <CardHeader>
-                    <CardTitle>{item.name}</CardTitle>
+                    <CardTitle className="flex justify-between items-center">
+                      {item.name}
+
+                      {/* <Button
+                        size="sm"
+                        onClick={() => {
+                          console.log("clicked");
+                        }}
+                      >
+                        <PlusIcon size={12} />
+                      </Button> */}
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button size="sm">
+                            <PlusIcon size={12} />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Add an event</DialogTitle>
+                            <AddEventForm
+                              calendar={selectedCalendar}
+                              date={new Date(item.date)}
+                              events={allEvents}
+                              setEvents={setAllEvents}
+                              // convert "date": "20 Jan 2025 to Date object
+                              defaultValues={{
+                                title: item.name,
+                                location: item.location,
+                                date: new Date(item.date),
+                              }}
+                            />
+                          </DialogHeader>
+                        </DialogContent>
+                      </Dialog>
+                    </CardTitle>
                     {item.novel_reason && (
-                      <CardDescription>{item.novel_reason}</CardDescription>
+                      <CardDescription>{item.location}</CardDescription>
                     )}
-                  </CardHeader>
-                  <CardContent>
                     <p className="text-sm">{item.date}</p>
-                  </CardContent>
+                  </CardHeader>
                 </Card>
               ))}
             {/* </SidebarMenu> */}

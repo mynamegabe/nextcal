@@ -15,7 +15,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { title } from "process";
 import { createCalendar } from "@/lib/api";
 import { DialogClose } from "./ui/dialog";
 
@@ -25,7 +24,7 @@ const formSchema = z.object({
   color: z.string(),
 });
 
-export function AddCalendarForm() {
+export function AddCalendarForm({calendars, setCalendars}) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -35,6 +34,9 @@ export function AddCalendarForm() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     let res = await createCalendar(values);
+    if (res) {
+      setCalendars([...calendars, res.calendar]);
+    }
   }
   return (
     <Form {...form}>

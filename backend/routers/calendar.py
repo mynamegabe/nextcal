@@ -93,7 +93,7 @@ async def create_calendar(calendar: schemas.CalendarCreate, session: SessionDep,
         session.commit()
         session.refresh(db_calendar)
 
-        return {"status": "Success! Calendar created."}
+        return {"status": "Success! Calendar created.", "calendar": db_calendar}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

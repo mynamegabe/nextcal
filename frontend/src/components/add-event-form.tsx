@@ -51,13 +51,14 @@ const formSchema = z.object({
   calendar_id: z.string().optional(),
 });
 
-export function AddEventForm({ calendar, date, events, setEvents, onSuccess }) {
+export function AddEventForm({ calendar, date, events, setEvents, onSuccess, defaultValues={}, view=false }) {
   const [startTime, setStartTime] = useState("AM");
   const [endTime, setEndTime] = useState("AM");
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      ...defaultValues,
       frequency: "One-time",
     },
   });
@@ -92,6 +93,7 @@ export function AddEventForm({ calendar, date, events, setEvents, onSuccess }) {
         description: "Event created successfully",
       });
     } catch (error) {
+      console.log(error);
       toast({
         variant: "destructive", 
         title: "Error",
@@ -267,7 +269,7 @@ export function AddEventForm({ calendar, date, events, setEvents, onSuccess }) {
         </div>
 
         <DialogClose asChild>
-          <Button type="submit">Submit</Button>
+          { view ? null : <Button type="submit">Submit</Button> }
         </DialogClose>
       </form>
     </Form>

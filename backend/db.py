@@ -45,19 +45,21 @@ class CalendarEvent(SQLModel, table=True):
     start_time: int = Field(sa_column=Column(BigInteger()))
     end_time: int = Field(sa_column=Column(BigInteger()))
     calendar_id: str = Field(foreign_key="calender.calendar_id")
+    url: str | None = Field(default=None)
 
 ## Recommendation Table - Uses calendar_id as the foreign key 
 class Recommendations(SQLModel, table=True):
     recommendation_id: str | None = Field(default=None, primary_key=True)
     name: str
-    description: str
+    description: str | None = Field(default=None)
     duration_minutes: int
     duration_hours : float
     is_novel: bool | None = Field(default=False)
-    novel_reason: str | None = Field(default=None)
-    date: str  # Format: YYYY-MM-DD
+    novel_reason: str | None = Field(default='')
+    date: str | None = Field(default='') # Format: YYYY-MM-DD
     calendar_id: str = Field(foreign_key="calender.calendar_id")
-    location: str
+    location: str | None = Field(default='')
+    url: str | None = Field(default='')
   
 # mysql
 db_url = f"mysql+pymysql://{DB_USERNAME}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}"
